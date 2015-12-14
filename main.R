@@ -29,7 +29,7 @@ bikedata
     boxplot(registered~season)
     boxplot(casual~season)  #등록유무에 따른 모형의 형태가 다른지 확인(모형의 형태만 볼것, 숫자의 크기는 서로 분산이 다름)
     
-    boxplot(count~holiday)
+    boxplot(count~holiday) #상관관계 찾기 어려움, 제거
     boxplot(registered~holiday)
     boxplot(casual~holiday)
 
@@ -57,8 +57,7 @@ bikedata
     qqplot(count,humidity)
 
 
-bikemodel.1<-lm(count~season+weather+temp) # 변경예정
-
+bikemodel.1<-glm(count~season+weather+temp+humidity+windspeed) # 변경예정
 
 #weather는 Ranking을 가진다고 볼 수 있을 것 같음 클수록 악천후
 
