@@ -15,6 +15,7 @@ head(bikedata)
 
 #분석 편의를 위하여 Attach
 attach(bikedata)
+detach(bikedata)
 #데이터 전처리 수행
   #(Finish)Datatime 연도별, 월별, 일별, 요일별, 시간별로 바꿀 수 있을 듯, 시간대도 가능하면 투입. 오전, 오후, 저녁, 심야, 새벽 등으로 구분
   #(Finish)season 같은 경우 순서형 변수가 아니므로 명목형태로 바꾸어 줘야 할듯.
@@ -60,6 +61,12 @@ attach(bikedata)
     plot(registered,windspeed)
     plot(casual,windspeed)
     
+    bikedata$categorized_windspeed<-0
+    bikedata$categorized_windspeed[bikedata$windspeed>=20]<-1
+    bikedata$categorized_windspeed[bikedata$windspeed>=40]<-2 #바람세기 3단계로 구분
+    
+    boxplot(count~bikedata$categorized_windspeed)
+    
     boxplot(count~bikedata$hour) #시간대에 따른 차이가 큼. 그룹화 필요
     
     boxplot(count~bikedata$month) #월별 차이 뚜렸하지 않음. 계절차이 고려가 나아보임.
@@ -70,7 +77,7 @@ attach(bikedata)
     
 
 
-bikemodel.1<-glm(count~season+weather+temp+humidity+windspeed) # 변경예정
+bikemodel.1<-glm(count~season+weather+temp+humidity+categorized_windspeed) # 변경예정
 
 #weather는 Ranking을 가진다고 볼 수 있을 것 같음 클수록 악천후
 
