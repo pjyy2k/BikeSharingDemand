@@ -4,7 +4,7 @@ install.packages("dplyr")
 library(dplyr)
 
 bikedata <- read.table(file="./DataSource/train.csv",header = TRUE, sep = ",")
-bikedata
+head(bikedata)
 
 #자료 Overview
   which(is.na(bikedata)==T)#결측치 확인
@@ -22,7 +22,13 @@ bikedata
     bikedata$season <- factor(bikedata$season)
     bikedata$holiday <- factor(bikedata$holiday)
     bikedata$workingday <- factor(bikedata$workingday)
+    bikedata$weekday <- weekday(as.Date(bikedata$datetime))
+    bikedata$time <- substring(bikedata$datetime,12,20) #12번째 이후 글자부터 20번째 글자까지
+    bikedata$hour <- as.numeric(substring(bikedata$time,0,2)) #시간만 따로 가져오기
+    
+    
     str(bikedata)
+    head(bikedata)
 
 #변수들 관계 overview    
     boxplot(count~season)
