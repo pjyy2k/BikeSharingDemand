@@ -14,21 +14,21 @@ head(bikedata)
   plot(bikedata) # Scotter plot
 
 #분석 편의를 위하여 Attach
-  attach(bikedata)
-
+attach(bikedata)
 #데이터 전처리 수행
-  #Datatime 연도별, 월별, 일별, 요일별, 시간별로 바꿀 수 있을 듯, 시간대도 가능하면 투입. 오전, 오후, 저녁, 심야, 새벽 등으로 구분
+  #(Finish)Datatime 연도별, 월별, 일별, 요일별, 시간별로 바꿀 수 있을 듯, 시간대도 가능하면 투입. 오전, 오후, 저녁, 심야, 새벽 등으로 구분
   #(Finish)season 같은 경우 순서형 변수가 아니므로 명목형태로 바꾸어 줘야 할듯.
     bikedata$season <- factor(bikedata$season)
     bikedata$holiday <- factor(bikedata$holiday)
     bikedata$workingday <- factor(bikedata$workingday)
-    bikedata$weekday <- weekday(as.Date(bikedata$datetime))
-    bikedata$time <- substring(bikedata$datetime,12,20) #12번째 이후 글자부터 20번째 글자까지
-    bikedata$hour <- as.numeric(substring(bikedata$time,0,2)) #시간만 따로 가져오기
+    bikedata$months <- months(as.Date(bikedata$datetime))
+    bikedata$weekday <- weekdays(as.Date(bikedata$datetime))
+    bikedata$hour <- as.numeric(substring(bikedata$datetime,12,13)) #12번째 이후 글자부터 20번째 글자까지
     
     
     str(bikedata)
     head(bikedata)
+    tail(bikedata)
 
 #변수들 관계 overview    
     boxplot(count~season)
@@ -60,7 +60,14 @@ head(bikedata)
     plot(registered,windspeed)
     plot(casual,windspeed)
     
-    qqplot(count,humidity)
+    boxplot(count~bikedata$hour) #시간대에 따른 차이가 큼. 그룹화 필요
+    
+    boxplot(count~bikedata$month) #월별 차이 뚜렸하지 않음. 계절차이 고려가 나아보임.
+    
+    boxplot(count~bikedata$weekday) #요일별 차이 크지 않음. working,holiday 구분에서도 요일별 차이 크지 않음.
+    boxplot(registered~bikedata$weekday)
+    boxplot(casual~bikedata$weekday) # casual의 경우 요일별 대여인원 차이가 있음. registered에 비해서 적은 수라서 전체 대여인원에는 영향 미미해보이나 유의해보임
+    
 
 
 bikemodel.1<-glm(count~season+weather+temp+humidity+windspeed) # 변경예정
