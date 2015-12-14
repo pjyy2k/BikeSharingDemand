@@ -45,6 +45,7 @@ bikedata
     boxplot(count~humidity) #선형이 아님, 변수변환 고려
     boxplot(registered~humidity)
     boxplot(casual~humidity)
+    plot(count,humidity)
     
     boxplot(count~windspeed) #선형 아님, 극단값의 영향을 받음. 로그 변환이나 이분화 하는 것도 좋을 듯
     boxplot(registered~windspeed)
@@ -53,6 +54,7 @@ bikedata
     plot(registered,windspeed)
     plot(casual,windspeed)
     
+    qqplot(count,humidity)
 
 
 bikemodel.1<-lm(count~season+weather+temp) # 변경예정
