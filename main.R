@@ -15,7 +15,7 @@ head(bikedata)
 
 #분석 편의를 위하여 Attach
 attach(bikedata)
-detach(bikedata)
+#detach(bikedata)
 #데이터 전처리 수행
   #(Finish)Datatime 연도별, 월별, 일별, 요일별, 시간별로 바꿀 수 있을 듯, 시간대도 가능하면 투입. 오전, 오후, 저녁, 심야, 새벽 등으로 구분
   #(Finish)season 같은 경우 순서형 변수가 아니므로 명목형태로 바꾸어 줘야 할듯.
@@ -26,6 +26,7 @@ detach(bikedata)
     bikedata$weekday <- weekdays(as.Date(bikedata$datetime))
     bikedata$hour <- as.numeric(substring(bikedata$datetime,12,13)) #12번째 이후 글자부터 20번째 글자까지
     
+    sum(bikedata$count[bikedata$hour==9]) #자료를 합해서 분할표 만들고 이걸로 로지스틱회귀분석 수행하면 될듯  
     
     str(bikedata)
     head(bikedata)
@@ -48,11 +49,16 @@ detach(bikedata)
     boxplot(registered~temp)
     boxplot(casual~temp)
   #temp와 atemp는 비슷한 양상을 보이나 같은 것은 아니므로, 어느것이 더 적합이 잘되는지는 테스트 후에 결정해야 할듯
-    
+    bikedata$newhumidity<-bikedata$humidity^-3.3
+    boxplot(count~bikedata$newhumidity)
     boxplot(count~humidity) #선형이 아님, 변수변환 고려
     boxplot(registered~humidity)
     boxplot(casual~humidity)
     plot(count,humidity)
+    tt<-boxcox(count~humidity, lambda = seq(-2, 2, 1/10), plotit = TRUE,interp = TRUE, eps = 1/50, xlab = expression(lambda))
+    max(tt$y)
+    tt$y
+    tt$x #0.3030
     
     boxplot(count~windspeed) #선형 아님, 극단값의 영향을 받음. 로그 변환이나 이분화 하는 것도 좋을 듯
     boxplot(registered~windspeed)
