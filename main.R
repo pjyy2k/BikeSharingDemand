@@ -4,6 +4,49 @@ install.packages("dplyr")
 library(dplyr)
 
 bikedata <- read.table(file="./DataSource/train.csv",header = TRUE, sep = ",")
+bikedata<-data
+df <- bikedata
+
+#아래는 임시코드(분포표 생성을 위한)
+
+hour <-numeric(0)
+casual <-numeric(0)
+weather <-numeric(0)
+count <-numeric(0)
+
+for (i in 1:4){
+  for(j in 1:24){
+    for(k in 0:1){
+      weather<-c(weather,i)
+      hour<-c(hour,j)
+      casual<-c(casual,k)
+      count<-c(count,sum(df$count[df$weather==i & df$hour==j & df$casual==k]))
+    }
+  }
+}
+data.frame(weather,hour,casual,count)
+
+
+head(df)
+Newdf
+
+
+
+
+
+
+
+#임시코드 끝
+
+
+
+
+
+
+
+
+
+
 head(bikedata)
 
 #자료 Overview
@@ -26,7 +69,31 @@ attach(bikedata)
     bikedata$weekday <- weekdays(as.Date(bikedata$datetime))
     bikedata$hour <- as.numeric(substring(bikedata$datetime,12,13)) #12번째 이후 글자부터 20번째 글자까지
     
-    sum(bikedata$count[bikedata$hour==9]) #자료를 합해서 분할표 만들고 이걸로 로지스틱회귀분석 수행하면 될듯  
+    summary(bikedata$count)
+    
+    for(i in 0:9){ # bike 대여 count에 따라 범주화
+      bikedata$CatCount[bikedata$count >= i*100 & bikedata$count < (i+1)*100] <- (i)
+    }
+    
+    str(bikedata)
+    summary(bikedata$CatCount)
+    which(is.na(bikedata$CatCount)==T) #Categorized 안된 항목이 있는지 확인
+    
+    vglm(CatCount~hour,family=cumulative,data=Newdf)
+    
+    hours<-c(1:24)
+    count<-c(1:24)
+    Newdf<-data.frame(hours,count)
+    for(i in 1:24){
+      Newdf$hours[i] <- i
+      Newdf$count[i] <- sum(bikedata$count[bikedata$hour==i]) #자료를 합해서 분할표 만들고 이걸로 로지스틱회귀분석 수행하면 될듯
+    }
+    
+    Newdf
+    vglm(CatCount~hour,family=cumulative,data=Newdf)
+    
+    
+    str(Newdf)
     
     str(bikedata)
     head(bikedata)
@@ -48,6 +115,13 @@ attach(bikedata)
     boxplot(count~temp)
     boxplot(registered~temp)
     boxplot(casual~temp)
+    
+    
+    with (bikedata,boxplot(count~hour*holiday)) #휴일유무에 따른 시간별 대여량에 유의한 차이가 있는가?
+    ggplot(aes(y=count,x=hour,fill=holiday),data=bikedata) +geom_boxplot()
+    
+    
+    
   #temp와 atemp는 비슷한 양상을 보이나 같은 것은 아니므로, 어느것이 더 적합이 잘되는지는 테스트 후에 결정해야 할듯
     bikedata$newhumidity<-bikedata$humidity^-3.3
     boxplot(count~bikedata$newhumidity)
