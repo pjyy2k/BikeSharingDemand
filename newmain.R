@@ -115,7 +115,7 @@ df$CatCount[df$count >= 200 ] <- 2
 
 CatHour <-numeric(0)
 frq1 <-numeric(0)
-frq2 <-numeric(0)
+frq2 <-numeric(0)ex
 frq3 <-numeric(0)
 for(j in 0:1){ # of hour
   CatHour<-c(CatHour,j)
@@ -132,17 +132,19 @@ table.CatHour
 str(table.CatHour)
 table.CatHour$CatHour <- as.factor(table.CatHour$CatHour)
 library(VGAM)
-ftd.model.0 <-vglm(cbind(frq1,frq2,frq3)~CatHour, family=cumulative(parallel=FALSE), data=table.CatHour)
+ftd.model.0 <-vglm(cbind(frq1,frq2,frq3)~CatHour, family=cumulative(parallel=TRUE), data=table.CatHour)
 summary(ftd.model.0)
 fitted(ftd.model.0)
 
-ftd.model.1 <-vglm(cbind(frq1,frq2,frq3)~CatHour, family=cumulative(parallel=TRUE), data=table.CatHour)
+ftd.model.1 <-vglm(cbind(frq1,frq2,frq3)~CatHour, family=cumulative(parallel=FALSE), data=table.CatHour)
 summary(ftd.model.1)
 fitted(ftd.model.1)
 
 
-
-
+pchisq(deviance(ftd.model.0)-deviance(ftd.model.1),
+       df=df.residual(ftd.model.0)-df.residual(ftd.model.1), lower.tail=FALSE)
+deviance(ftd.model.1)
+df.residual(ftd.model.0)
 
 
 
