@@ -5,6 +5,9 @@ which(is.na(df)==T)#결측치 확인
 str(df) #자료 형태 관찰
 head(df) #자료 미리보기
 summary(df) #자료 요약값 제공
+plot(df) # Scotter plot
+
+boxplot(df$count~df$hour)
 
 #데이터 전처리
 df$season <- factor(df$season)
@@ -15,10 +18,6 @@ df$weekday <- weekdays(as.Date(df$datetime))
 df$hour <- as.numeric(substring(df$datetime,12,13))
 #weather의 경우 1에서 4로 갈수록 악천후의 성격을 띄고 있어서 순서형 범주로 보고 int 형태로 유지.
 
-plot(df) # Scotter plot
-
-boxplot(df$count~df$weather)
-boxplot(df$count~df$hour)
 #문자형태 변수 숫자로 변환
 df$months[df$months=="1월"]<-1
 df$months[df$months=="2월"]<-2
@@ -41,27 +40,12 @@ df$weekday[df$weekday=="목요일"]<-5
 df$weekday[df$weekday=="금요일"]<-6
 df$weekday[df$weekday=="토요일"]<-7
 
-#자전거 대여량 범주화
-for(i in 0:3){ # bike 대여 count에 따라 범주화(250단위씩 끊어서)
-  df$CatCount[df$count >= i*250 & df$count < (i+1)*250] <- (i)
-}
-rm(i) #불필요한 변수 삭제
-df$dmfcc =1 #dummy for cell counting. all has '1'
-str(df)
-
-
-
-#분할표 작성, 설명변수 : weekday, weather,hour,months
-#분할표내에서 사용할 변수선언
 weekday<-numeric(0)
 hour <-numeric(0)
 weather <-numeric(0)
 months<-numeric(0)
-frq1 <-numeric(0)
-frq2 <-numeric(0)
-frq3 <-numeric(0)
-frq4 <-numeric(0)
-frq5 <-numeric(0)
+frq <-numeric(0)
+
 #일부 변수는 제외 : workingday -> holiday로 대체, season -> months로 대체
 #추후 선택해야 하는 변수 : holiday & weekday => holiday중 weekday가 차지하는 비중이 높아 다중공선성의 문제가 발생할 여지가 있기 때문에 선택예정
 #
@@ -73,16 +57,13 @@ for (h in 1:7){ # of weekday
         weather<-c(weather,i)
         hour<-c(hour,j)
         months<-c(months,k)
-        frq1<-c(frq1,sum(df$dmfcc[df$weekday==h & df$weather==i & df$hour==j & df$months==k & df$CatCount==0]))
-        frq2<-c(frq2,sum(df$dmfcc[df$weekday==h & df$weather==i & df$hour==j & df$months==k & df$CatCount==1]))
-        frq3<-c(frq3,sum(df$dmfcc[df$weekday==h & df$weather==i & df$hour==j & df$months==k & df$CatCount==2]))
-        frq4<-c(frq4,sum(df$dmfcc[df$weekday==h & df$weather==i & df$hour==j & df$months==k & df$CatCount==3]))
-        }
+        frq<-c(frq,sum(df$count[df$weekday==h & df$weather==i & df$hour==j & df$months==k]))
+      }
     }
   }
 }
-# 빈도 관찰이 적어서 수행불가.
 
+ctgc.table <- data.frame(weekday,weather,hour,months,frq)
 
 #분할표작성2, 반응변수 : 시간
 
@@ -103,57 +84,41 @@ table.hour
 
 #빈도 0인 셀 관찰됨, 시간 그룹화, 대여량 범주 단순화
 
+# 20~05 : 야간(1)
+# 06~08 : 출근(2)
+# 09~16 : 활동(3)
+# 17~19 : 퇴근(4)
+df$CatHour[df$hour>=20 | df$hour <=5] <-1
+df$CatHour[df$hour>=6 & df$hour <=8] <-2
+df$CatHour[df$hour>=9 & df$hour <=16] <-3
+df$CatHour[df$hour>=17 & df$hour <=19] <-4
 
-# 06~08,17~19 : 출퇴근(1)
-df$CatHour <-0
-df$CatHour[df$hour>=6 & df$hour <=8] <-1
-df$CatHour[df$hour>=17 & df$hour <=19] <-1
-
-df$CatCount[df$count >= 0 & df$count < 100] <- 0
-df$CatCount[df$count >= 100 & df$count < 200] <- 1
-df$CatCount[df$count >= 200 ] <- 2
+df$CatCount[df$count >= 0 & df$count < 200] <- 0
+df$CatCount[df$count >= 200 & df$count < 400] <- 1
+df$CatCount[df$count >= 400 ] <- 2
 
 CatHour <-numeric(0)
 frq1 <-numeric(0)
 frq2 <-numeric(0)
 frq3 <-numeric(0)
-for(j in 0:1){ # of hour
+for(j in 1:4){ # of hour
   CatHour<-c(CatHour,j)
   frq1<-c(frq1,sum(df$dmfcc[df$CatHour==j & df$CatCount==0]))
   frq2<-c(frq2,sum(df$dmfcc[df$CatHour==j & df$CatCount==1]))
   frq3<-c(frq3,sum(df$dmfcc[df$CatHour==j & df$CatCount==2]))
 }
 
+vglm()
+
+
 table.CatHour<-data.frame(CatHour,frq1,frq2,frq3)
 rm(CatHour,frq1,frq2,frq3,j)
 
 table.CatHour
 
-str(table.CatHour)
-table.CatHour$CatHour <- as.factor(table.CatHour$CatHour)
-library(VGAM)
 ftd.model.0 <-vglm(cbind(frq1,frq2,frq3)~CatHour, family=cumulative(parallel=FALSE), data=table.CatHour)
 summary(ftd.model.0)
 fitted(ftd.model.0)
-
-ftd.model.1 <-vglm(cbind(frq1,frq2,frq3)~CatHour, family=cumulative(parallel=TRUE), data=table.CatHour)
-summary(ftd.model.1)
-fitted(ftd.model.1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ctgctable<-data.frame(weekday,weather,hour,months,frq1,frq2,frq3,frq4,frq5)
 rm(weekday,weather,hour,months,count,CatCount,frq1,frq2,frq3,frq4,frq5,g,h,i,j,k,l)
